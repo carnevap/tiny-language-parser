@@ -1,0 +1,6 @@
+INT MAIN F()  /** CORRECT "PROGRAM" & * & % @ ! */ WITH QSTRING**/
+BEGIN
+	STRING x;
+	x := "100";
+	WRITE(x, "XKOUTPUT");
+END

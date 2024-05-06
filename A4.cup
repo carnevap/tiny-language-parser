@@ -1,0 +1,90 @@
+import java.io.*;
+
+/* Terminals (tokens returned by the scanner). */
+terminal String PLUS, MINUS, TIMES, DIVIDE, EQUAL, LPAREN, RPAREN, ID,READ, WRITE, IF, ELSE, RETURN, BEGIN, END,  MAIN, STRING, INT, REAL, Integer, QSTRING, Float, COMMA, COLON, SEMICOLON, NOTEQUAL, ASSIGN;
+
+/* Non terminals */
+non terminal String Start;
+non terminal String Program;
+non terminal String MethodDecl;
+non terminal String MainDecl;
+
+non terminal String Fdeclare;
+non terminal String OPdecList;
+non terminal String decList;
+
+non terminal String OPStatementList;
+non terminal String StatementList;
+non terminal String Statement;
+
+non terminal String Block;
+non terminal String LocalVarDecl;
+non terminal String AssignmentStmt;
+non terminal String ReturnStmt;
+non terminal String MatchedIF;
+non terminal String UnmatchedIF;
+non terminal String WriteStmt;
+non terminal String ReadStmt;
+
+non terminal String TYPE;
+
+non terminal String expr;
+non terminal String sum;
+non terminal String term;
+non terminal String product;
+non terminal String factor;
+
+non terminal String FCall;
+
+non terminal String OPParamList;
+non terminal String ParamList;
+non terminal String Param;
+
+non terminal String BoolExpr;
+
+/* Precedences */
+precedence left PLUS, MINUS;
+precedence left TIMES, DIVIDE;
+
+/* The grammar */
+
+Start ::= Program:p {: RESULT = "import.java.io.*; \n public class A4{"+ p +"}"; :};
+Program ::= MethodDecl:m Program:p {: RESULT = m + p; :}|MethodDecl:m {: RESULT = m; :};
+MethodDecl ::= MainDecl|Fdeclare;
+
+MainDecl ::= TYPE MAIN ID LPAREN OPdecList RPAREN Block:b {:RESULT = "public static void main(String [] args) throws Exception" + b;:}; 
+
+Fdeclare ::= TYPE ID LPAREN OPdecList RPAREN Block;
+OPdecList ::= decList| ;
+decList ::= TYPE ID COMMA decList|TYPE ID;
+
+StatementList ::= Statement StatementList|Statement;
+Statement ::= MatchedIF|UnmatchedIF;
+
+
+Block ::= BEGIN StatementList END;
+LocalVarDecl ::= TYPE ID SEMICOLON|TYPE AssignmentStmt;
+AssignmentStmt ::= ID:id ASSIGN expr:e SEMICOLON {: RESULT = id + "=" + e + ";"; :} |ID:id ASSIGN QSTRING:q SEMICOLON {: RESULT = id + "=" + q + ";"; :};
+ReturnStmt ::= RETURN expr:e SEMICOLON {: RESULT = "return" + e + ";";:};
+
+MatchedIF ::= IF LPAREN BoolExpr RPAREN MatchedIF ELSE MatchedIF|Block|LocalVarDecl|AssignmentStmt|ReturnStmt|WriteStmt|ReadStmt;
+UnmatchedIF ::= IF LPAREN BoolExpr RPAREN Statement|IF LPAREN BoolExpr RPAREN MatchedIF ELSE UnmatchedIF;
+
+WriteStmt ::= WRITE LPAREN expr:e COMMA QSTRING:q RPAREN SEMICOLON {: RESULT = "BufferedWriter" + "(" + e + ":" + q + ")" + ";"; :};
+ReadStmt ::= READ LPAREN ID:id COMMA QSTRING:q RPAREN SEMICOLON {: RESULT = "BufferedReader" + "(" + id + ":" + q + ")" + ";"; :};
+
+TYPE ::= INT {: RESULT = "int"; :}|REAL {: RESULT = "float"; :}|STRING {: RESULT = "String"; :};
+
+expr ::= term:t sum:s {: RESULT = t + s; :};
+sum ::= PLUS term:t sum:s {: RESULT = "+" + t + s; :}|MINUS term:t sum:s {: RESULT = "-" + t + s; :};
+term ::= factor:f product:p {: RESULT = f + p; :};
+product ::=  TIMES factor:f product:p {: RESULT = "*" + f + p; :}|DIVIDE factor:f product:p {: RESULT = "/" + f + p; :};
+factor ::= Integer:int {: RESULT = int; :}|Float:f {: RESULT = f; :}|ID:id {: RESULT = id; :}|FCall:fc {: RESULT = fc; :}|LPAREN expr:e RPAREN {: RESULT = "(" + e + ")"; :};
+
+FCall ::= ID:id LPAREN OPParamList:op RPAREN {: RESULT = id + "(" + op + ")"; :};
+
+OPParamList ::= ParamList:pl {: RESULT = pl; :};
+ParamList ::= Param:p COMMA ParamList:pl {: RESULT = p + "," + pl; :}|Param:p {: RESULT = p; :};
+Param ::= factor:f {: RESULT = f; :}|QSTRING:q {: RESULT = q; :};
+
+BoolExpr ::= expr:e EQUAL expr:e2 {:RESULT = e + "=" + e2;:}| expr:e NOTEQUAL expr:e2 {:RESULT = e + "!=" + e2;:};
